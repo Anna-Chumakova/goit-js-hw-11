@@ -6,7 +6,7 @@ export default class GallaryApiService {
   }
    async fetchImages() {
     const KEY = '29286270-7757e7c355ff8fc146957d618';
-    const URL = `https://pixabay.com/api/?key=${KEY}&q=${this.searchQuery}&image_type=photo&orientation=horizontal&safesearch=true&page=${this.page}`;
+    const URL = `https://pixabay.com/api/?key=${KEY}&q=${this.searchQuery}&image_type=photo&orientation=horizontal&safesearch=true&page=${this.page}&per_page=40`;
     
     const responce = await axios.get(URL);
      this.incrementPage();

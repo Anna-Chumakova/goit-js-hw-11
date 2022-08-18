@@ -4,43 +4,76 @@ import  GallaryApiService  from "./fetchImages";
 import SimpleLightbox from "simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
 
-
-  
-
 const formEl = document.querySelector("#search-form");
-const btnSearchEl = document.querySelector("[type='submit']");
 const btnLoadMoreEl = document.querySelector("[type='button']");
 const gallaryListEl = document.querySelector(".gallery");
-
+hideBtn();
 const galleryService = new GallaryApiService();
+const gallerySimple = new SimpleLightbox('.gallery a');
 
 formEl.addEventListener("submit", onSearch);
 btnLoadMoreEl.addEventListener("click", onLoadMore);
 
-function onSearch(e) {
+async function onSearch(e) {
     e.preventDefault();
-    galleryService.query = e.currentTarget.elements.searchQuery.value;
-    galleryService.resetPage();
-    galleryService.fetchImages().then(({ data }) => {
-        insertContent(data.hits);
-    })
-          
+    galleryService.query = e.currentTarget.elements.searchQuery.value.trim();
+    if (galleryService.query === "") {
+        Notiflix.Notify.info("Please enter text and try again.");
+        return;
+    } else {
+        galleryService.resetPage();
+        cleaneResult();
+    
+    try {
+        const { data } = await galleryService.fetchImages();
+      if (data.totalHits === 0) {
+        Notiflix.Notify.failure(
+          'Sorry, there are no images matching your search query. Please try again.'
+        );
+        return;
+      }
+      insertContent(data.hits);
+      gallerySimple.refresh();
+        Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
+        showBtn();
+    } catch (error) {
+      console.log(error.message);
+    }
+    }           
 }
-function onLoadMore() {
-    galleryService.fetchImages().then(({ data }) => {
-        insertContent(data.hits);
-    });
-}     
-const insertContent = (hits) => {
+
+async function onLoadMore() {
+    try {
+    hideBtn();
+    const { data } = await galleryService.fetchImages();
+    insertContent(data.hits);
+        gallerySimple.refresh();
+        showBtn();
+    countPages(data.totalHits);
+        
+    } catch (error) {
+    console.log(error.message);
+    }
+    } 
+
+function countPages(amount) {
+  const pageAmount = Math.ceil(amount / 40);
+  const currentPage = galleryService.page;
+    if (currentPage > pageAmount) {
+        hideBtn();
+        return Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
+    }    
+}
+function insertContent (hits) {
     const result = generateGallaryImages(hits);
     gallaryListEl.insertAdjacentHTML("beforeend", result);   
 }
-
-const createImageCard = (items) => {
+function createImageCard (items) {
     const { largeImageURL, webformatURL, tags, likes, views, comments, downloads } = items;
-    return `<div class="photo-card">
-  <a class="gallery__item" href="${largeImageURL}"><img src="${webformatURL}" alt="${tags}" loading="lazy" /></a>
-  <div class="info">
+    return `<a class="gallery__item" href="${largeImageURL}">
+    <div class="photo-card">
+    <img class="img_item" src="${webformatURL}" alt="${tags}" loading="lazy" />
+    <div class="info">
     <p class="info-item">
       <b>Likes</b>${likes}
     </p>
@@ -54,13 +87,18 @@ const createImageCard = (items) => {
       <b>Downloads</b>${downloads}
     </p>
   </div>
-</div>`;
+</div>
+</a>`;
 }
-
-
-const generateGallaryImages = (items) => items?.reduce((acc, item) => acc + createImageCard(item), "");
-
+function generateGallaryImages(items) {
+  return  items?.map((item) => createImageCard(item)).join(" ");
+}
 function cleaneResult() {
     gallaryListEl.innerHTML = "";
 }
-
+function showBtn() {
+    btnLoadMoreEl.classList.remove("is-hidden");
+}
+function hideBtn() {
+    btnLoadMoreEl.classList.add("is-hidden");
+}
