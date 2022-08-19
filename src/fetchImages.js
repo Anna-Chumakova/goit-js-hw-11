@@ -4,13 +4,16 @@ export default class GallaryApiService {
     this.searchQuery = "";
     this.page = 1;
   }
-   async fetchImages() {
+  async fetchImages() {
+    const BAES_URL = "https://pixabay.com/api/";
+    const PARAM = "image_type=photo&orientation=horizontal&safesearch=true"
+    const PER_PAGE = "per_page=40";
     const KEY = '29286270-7757e7c355ff8fc146957d618';
-    const URL = `https://pixabay.com/api/?key=${KEY}&q=${this.searchQuery}&image_type=photo&orientation=horizontal&safesearch=true&page=${this.page}&per_page=40`;
+
+    const URL = `${BAES_URL}?key=${KEY}&q=${this.searchQuery}&${PARAM}&page=${this.page}&${PER_PAGE}`;
     
-    const responce = await axios.get(URL);
-     this.incrementPage();
-     return responce;
+    const response = await axios.get(URL);
+     return response;
   }
   incrementPage() {
     this.page += 1;
@@ -18,12 +21,7 @@ export default class GallaryApiService {
   resetPage() {
     this.page = 1;
   }
-  get query() {
-    return this.searchQuery;
-  }
-  set query(newQuery) {
-    return this.searchQuery = newQuery;
-  }
+  
 }
 
 

@@ -15,9 +15,10 @@ formEl.addEventListener("submit", onSearch);
 btnLoadMoreEl.addEventListener("click", onLoadMore);
 
 async function onSearch(e) {
+    hideBtn();
     e.preventDefault();
-    galleryService.query = e.currentTarget.elements.searchQuery.value.trim();
-    if (galleryService.query === "") {
+    galleryService.searchQuery = e.currentTarget.elements.searchQuery.value.trim();
+    if (galleryService.searchQuery === "") {
         Notiflix.Notify.info("Please enter text and try again.");
         return;
     } else {
@@ -26,18 +27,20 @@ async function onSearch(e) {
     
     try {
         const { data } = await galleryService.fetchImages();
-      if (data.totalHits === 0) {
+        galleryService.incrementPage();
+    if (data.totalHits === 0) {
         Notiflix.Notify.failure(
           'Sorry, there are no images matching your search query. Please try again.'
         );
         return;
-      }
-      insertContent(data.hits);
-      gallerySimple.refresh();
+        }
+        insertContent(data.hits);
+        gallerySimple.refresh();
         Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
-        showBtn();
+        countImages(data.totalHits);
+        countPages(data.totalHits);    
     } catch (error) {
-      console.log(error.message);
+        console.log(error.message);
     }
     }           
 }
@@ -46,19 +49,24 @@ async function onLoadMore() {
     try {
     hideBtn();
     const { data } = await galleryService.fetchImages();
+    galleryService.incrementPage();
     insertContent(data.hits);
-        gallerySimple.refresh();
-        showBtn();
-    countPages(data.totalHits);
-        
+    gallerySimple.refresh();
+    countImages(data.totalHits);
+    countPages(data.totalHits);    
     } catch (error) {
     console.log(error.message);
     }
     } 
 
+function countImages(amount) {
+    if (amount > 40) {
+        showBtn();
+    }
+}
 function countPages(amount) {
-  const pageAmount = Math.ceil(amount / 40);
-  const currentPage = galleryService.page;
+    const pageAmount = Math.ceil(amount / 40);
+    const currentPage = galleryService.page;
     if (currentPage > pageAmount) {
         hideBtn();
         return Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
