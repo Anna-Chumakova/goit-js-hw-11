@@ -37,7 +37,6 @@ async function onSearch(e) {
         insertContent(data.hits);
         gallerySimple.refresh();
         Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
-        countImages(data.totalHits);
         countPages(data.totalHits);    
     } catch (error) {
         console.log(error.message);
@@ -52,25 +51,20 @@ async function onLoadMore() {
     galleryService.incrementPage();
     insertContent(data.hits);
     gallerySimple.refresh();
-    countImages(data.totalHits);
     countPages(data.totalHits);    
     } catch (error) {
     console.log(error.message);
     }
-    } 
-
-function countImages(amount) {
-    if (amount > 40) {
-        showBtn();
-    }
-}
+} 
+    
 function countPages(amount) {
     const pageAmount = Math.ceil(amount / 40);
     const currentPage = galleryService.page;
-    if (currentPage > pageAmount) {
+    if (currentPage >= pageAmount) {
         hideBtn();
         return Notiflix.Notify.info("We're sorry, but you've reached the end of search results.");
-    }    
+    }
+    showBtn();
 }
 function insertContent (hits) {
     const result = generateGallaryImages(hits);
